@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export PAYPAL_CLIENT_ID=
+export PAYPAL_CLIENT_SECRET=

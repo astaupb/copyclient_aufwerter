@@ -1,0 +1,32 @@
+<h1>Guthaben zum Kaufen auswählen</h1>
+
+<!--<ul>
+    <li>5€</li>
+    <li>10€</li>
+    <li>15€</li>
+    <li>20€</li>
+    <li>25€</li>
+</ul>-->
+
+<label>Benutzername</label><input id="userInput" name="user" type="text"><br>
+<label>Guthaben</label><input id="creditInput" name="credit" type="number"><br>
+<button onclick="submit()">Zur Kaufseite</button>
+
+<script>
+    function submit() {
+        console.log(document.getElementById("userInput").value)
+        console.log(document.getElementById("creditInput").value)
+
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", reqListener);
+        oReq.open("GET", "http://localhost:5000/create/" + document.getElementById("creditInput").value);
+        oReq.send();
+    }
+
+    function reqListener() {
+        console.log(this.responseText);
+        if (this.responseText.startsWith("https://")) {
+            window.open(this.responseText,"_self")
+        }
+    }
+</script>
