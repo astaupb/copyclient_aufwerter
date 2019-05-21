@@ -1,13 +1,5 @@
 <h1>Guthaben zum Kaufen auswählen</h1>
 
-<!--<ul>
-    <li>5€</li>
-    <li>10€</li>
-    <li>15€</li>
-    <li>20€</li>
-    <li>25€</li>
-</ul>-->
-
 <label>Benutzername</label><input id="userInput" name="user" type="text"><br>
 <label>Guthaben</label><input id="creditInput" name="credit" type="number"><br>
 <button onclick="submit()">Zur Kaufseite</button>
@@ -25,8 +17,9 @@
 
     function reqListener() {
         console.log(this.responseText);
-        if (this.responseText.startsWith("https://")) {
-            window.open(this.responseText,"_self")
+        var link = JSON.parse(this.responseText)["link"];
+        if (link.startsWith("https://")) {
+            window.open(link,"_self")
         }
     }
 </script>

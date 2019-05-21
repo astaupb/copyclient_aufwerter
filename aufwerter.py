@@ -53,8 +53,9 @@ def success():
         payer_id = request.args.get("PayerID")
     except:
         print("not enough valid query arguments")
+        return Response(status=400, response="not enough query parameters specified for this")
 
-    stuff = "payment_id: {}, token: {}, payer_id: {}".format(
+    stuff = "Completing payment:\n payment_id: {},\n token: {},\n payer_id: {}".format(
         payment_id, token, payer_id)
     print(stuff)
     payment = paypalrestsdk.Payment.find(payment_id)
