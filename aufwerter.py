@@ -1,11 +1,25 @@
 import os
 import paypalrestsdk
 import logging
-from flask import Flask, render_template, request
+import json
+from flask import Flask, render_template, request, Response
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
+
+# INITIALIZE PAYPAL
+
+# credentials are loaded from environment variables
+# `source environ.sh` in your shell to get them
+client_id = os.getenv("PAYPAL_CLIENT_ID")
+client_secret = os.getenv("PAYPAL_CLIENT_SECRET")
+
+paypalrestsdk.configure({
+    "mode": "sandbox",  # sandbox or live
+    "client_id": client_id,
+    "client_secret": client_secret},)
+
 
 # ROUTES
 
@@ -15,12 +29,19 @@ def home():
     return render_template("home.html")
 
 # creates a paypal payment for the value provided in the url
-@app.route("/create/<transaction_height>")
-def create(transaction_height):
-    print("Creating transaction for {}.00€".format(transaction_height))
-    if int(transaction_height) >= 1:
-        approval_url = create_payment("{}.00".format(transaction_height))
-        return approval_url
+@app.route("/create/<value>")
+def create(value):
+    try:
+        intvalue = int(value)
+    except (ValueError, TypeError) as err:
+        print("could not parse proper int from url, ", err)
+        return Response(status=400, response="not a number")
+    print("Creating transaction for {}.00€".format(intvalue))
+    if check_value(intvalue):
+        approval_url = create_payment("{}.00".format(intvalue))
+        return json.dumps({"link": approval_url})
+    else:
+        return Response(status=400, response="number not valid for creating payment")
 
 
 # route that gets called after successful payment and finally executes the payment
@@ -63,14 +84,6 @@ def cancel():
 # creates paypal payment for specified price in dotted decimal format
 # returns corresponding approval_url aka the buying link
 def create_payment(price):
-    client_id = os.getenv("PAYPAL_CLIENT_ID")
-    client_secret = os.getenv("PAYPAL_CLIENT_SECRET")
-
-    paypalrestsdk.configure({
-        "mode": "sandbox",  # sandbox or live
-        "client_id": client_id,
-        "client_secret": client_secret},)
-
     payment = paypalrestsdk.Payment({
         "intent": "sale",
         "payer": {
@@ -98,7 +111,13 @@ def create_payment(price):
 
     for link in payment.links:
         if link.rel == "approval_url":
-            # Convert to str to avoid Google App Engine Unicode issue
-            # https://github.com/paypal/rest-api-sdk-python/pull/58
             approval_url = str(link.href)
             return approval_url
+
+
+# check integer values for existence in natural numbers
+# return true if integer is okay to create payment with
+def check_value(value):
+    if value < 1:
+        return False
+    return True
