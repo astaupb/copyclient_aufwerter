@@ -5,6 +5,8 @@ import json
 from flask import Flask, render_template, request, Response
 from flask_cors import CORS
 
+base_url = "http://127.0.0.1:5000"
+
 app = Flask(__name__)
 CORS(app)
 
@@ -39,6 +41,7 @@ def create(value):
     print("Creating transaction for {}.00€".format(intvalue))
     if check_value(intvalue):
         approval_url = create_payment("{}.00".format(intvalue))
+        print(" token: ", approval_url.split("=").pop())
         return json.dumps({"link": approval_url})
     else:
         return Response(status=400, response="number not valid for creating payment")
@@ -58,6 +61,7 @@ def success():
     stuff = "Completing payment:\n payment_id: {},\n token: {},\n payer_id: {}".format(
         payment_id, token, payer_id)
     print(stuff)
+
     payment = paypalrestsdk.Payment.find(payment_id)
 
     if payment.execute({"payer_id": payer_id}):
@@ -74,8 +78,9 @@ def cancel():
         token = request.args.get("token")
     except:
         print("no valid query arguments supplied")
+        return Response(status=400, response="not enough query parameters specified for this")
 
-    print(token)
+    print("Cancelled payment:\n token: ", token)
 
     return "Ayy, got cancelled"
 
@@ -88,25 +93,30 @@ def create_payment(price):
     payment = paypalrestsdk.Payment({
         "intent": "sale",
         "payer": {
-            "payment_method": "paypal"},
+            "payment_method": "paypal",
+        },
         "redirect_urls": {
-            "return_url": "http://127.0.0.1:5000/success",
-            "cancel_url": "http://127.0.0.1:5000/cancel"},
+            "return_url": "{}/success".format(base_url),
+            "cancel_url": "{}/cancel".format(base_url),
+        },
         "transactions": [{
             "item_list": {
                 "items": [{
-                    "name": "item",
-                    "sku": "item",
-                    "price": price,
-                    "currency": "EUR",
-                    "quantity": 1}]},
+                        "name": "item",
+                        "sku": "item",
+                        "price": price,
+                        "currency": "EUR",
+                        "quantity": 1},
+                ],
+            },
             "amount": {
                 "total": price,
-                "currency": "EUR"},
+                "currency": "EUR",
+            },
             "description": "This is the payment transaction description."}]})
 
     if payment.create():
-        print("payment created successfully")
+        print("Payment created successfully:")
     else:
         print(payment.error)
 
