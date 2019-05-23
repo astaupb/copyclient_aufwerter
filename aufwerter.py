@@ -22,6 +22,9 @@ paypalrestsdk.configure({
     "client_id": client_id,
     "client_secret": client_secret},)
 
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
+
 
 # ROUTES
 
@@ -102,11 +105,11 @@ def create_payment(price):
         "transactions": [{
             "item_list": {
                 "items": [{
-                        "name": "item",
-                        "sku": "item",
-                        "price": price,
-                        "currency": "EUR",
-                        "quantity": 1},
+                    "name": "item",
+                    "sku": "item",
+                    "price": price,
+                    "currency": "EUR",
+                    "quantity": 1},
                 ],
             },
             "amount": {

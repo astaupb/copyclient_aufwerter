@@ -157,6 +157,8 @@ tags
 # Ignore all local history of files
 .history
 
+.DS_Store
+
 environ.sh
 
 # End of https://www.gitignore.io/api/vim,python,visualstudiocode
