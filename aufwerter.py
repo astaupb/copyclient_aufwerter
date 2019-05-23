@@ -48,7 +48,7 @@ def home():
     return render_template("home.html") """
 
 # creates a paypal payment for the value provided in the url
-@app.route("/create/<value>")
+@app.route("/create/<value>", methods=["POST"])
 def create(value):
     try:
         intvalue = int(value)
@@ -72,7 +72,6 @@ def success():
         payment_id = request.args.get("paymentId")
         token = request.args.get("token")
         payer_id = request.args.get("PayerID")
-        user_id = int("37474")
     except:
         print("not enough valid query arguments")
         return Response(status=400, response="not enough query parameters specified for this")
@@ -82,6 +81,11 @@ def success():
     print(stuff)
 
     payment = paypalrestsdk.Payment.find(payment_id)
+    try:
+        user_id = int(payment.transactions[0].custom)
+    except (ValueError, TypeError) as err:
+        print("could not parse user_id from custom field, ", err)
+        return Response(status=500, response="could not parse user_id from custom field")
 
     if payment.execute({"payer_id": payer_id}):
         print("Payment executed successfully")
