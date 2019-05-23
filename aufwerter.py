@@ -2,13 +2,27 @@ import os
 import paypalrestsdk
 import logging
 import json
+import mysql.connector
 from flask import Flask, render_template, request, Response
 from flask_cors import CORS
 
-base_url = "https://astaprint.uni-paderborn.de/aufwerter"
+#base_url = "https://astaprint.uni-paderborn.de/aufwerter"
+base_url = "http://127.0.0.1:5000"
 
 app = Flask(__name__)
 CORS(app)
+
+db_url = os.getenv("ASTAPRINT_DATABASE_URL")
+db_url_split = db_url.split(':')
+db_user = db_url_split[1].replace("/", "")
+db_pw = db_url_split[2].split("@")[0]
+db_host = db_url_split[2].split("@")[1]
+db_port = db_url_split[3].split("/")[0]
+db_name = db_url_split[3].split("/")[1]
+
+cnx = mysql.connector.connect(
+    user=db_user, password=db_pw, host=db_host, port=db_port, database=db_name)
+cursor = cnx.cursor()
 
 # INITIALIZE PAYPAL
 
@@ -21,9 +35,6 @@ paypalrestsdk.configure({
     "mode": "sandbox",  # sandbox or live
     "client_id": client_id,
     "client_secret": client_secret},)
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0')
 
 
 # ROUTES
@@ -38,12 +49,13 @@ def home():
 def create(value):
     try:
         intvalue = int(value)
+        user_id = int(request.args['user_id'])
     except (ValueError, TypeError) as err:
         print("could not parse proper int from url, ", err)
         return Response(status=400, response="not a number")
     print("Creating transaction for {}.00€".format(intvalue))
     if check_value(intvalue):
-        approval_url = create_payment("{}.00".format(intvalue))
+        approval_url = create_payment("{}.00".format(intvalue), user_id)
         print(" token: ", approval_url.split("=").pop())
         return json.dumps({"link": approval_url})
     else:
@@ -57,6 +69,7 @@ def success():
         payment_id = request.args.get("paymentId")
         token = request.args.get("token")
         payer_id = request.args.get("PayerID")
+        user_id = 12345  # TODO
     except:
         print("not enough valid query arguments")
         return Response(status=400, response="not enough query parameters specified for this")
@@ -69,6 +82,9 @@ def success():
 
     if payment.execute({"payer_id": payer_id}):
         print("Payment executed successfully")
+        add_transaction = ("INSERT INTO journal "
+                           "(user_id, credit, value, description, created) "
+                           "VALUES ({}, {}, {}, {}, {})".format(user_id, "", "", "", ""))
         return render_template("success.html", id=payment.id)
     else:
         print(payment.error)  # Error Hash
@@ -92,7 +108,7 @@ def cancel():
 
 # creates paypal payment for specified price in dotted decimal format
 # returns corresponding approval_url aka the buying link
-def create_payment(price):
+def create_payment(price, user_id):
     payment = paypalrestsdk.Payment({
         "intent": "sale",
         "payer": {
@@ -102,21 +118,28 @@ def create_payment(price):
             "return_url": "{}/success".format(base_url),
             "cancel_url": "{}/cancel".format(base_url),
         },
-        "transactions": [{
-            "item_list": {
-                "items": [{
-                    "name": "item",
-                    "sku": "item",
-                    "price": price,
+        "transactions": [
+            {
+                "item_list": {
+                    "items": [{
+                        "name": "top-{}-up".format(price),
+                        "sku": "item",
+                        "price": price,
+                        "currency": "EUR",
+                        "quantity": 1},
+                    ],
+                },
+                "amount": {
+                    "total": price,
                     "currency": "EUR",
-                    "quantity": 1},
-                ],
-            },
-            "amount": {
-                "total": price,
-                "currency": "EUR",
-            },
-            "description": "This is the payment transaction description."}]})
+                },
+                "description": "Eine Aufladung von {}€ für deinen AStA Copyservice Account",
+                "custom": user_id,
+                "payment_options": {
+                    "allowed_payment_method": "INSTANT_FUNDING_SOURCE"
+                },
+            }
+        ]})
 
     if payment.create():
         print("Payment created successfully:")
