@@ -29,9 +29,9 @@ if __name__ == "__main__":
 # ROUTES
 
 # landing page with selection of credits
-@app.route("/")
+""" @app.route("/")
 def home():
-    return render_template("home.html")
+    return render_template("home.html") """
 
 # creates a paypal payment for the value provided in the url
 @app.route("/create/<value>")
@@ -69,10 +69,10 @@ def success():
 
     if payment.execute({"payer_id": payer_id}):
         print("Payment executed successfully")
-        return "Payment successful"
+        return render_template("success.html", id=payment.id)
     else:
         print(payment.error)  # Error Hash
-        return "Error"
+        return Response(status=500, response="error while executing payment {}".format(payment_id))
 
 
 @app.route("/cancel")
@@ -85,7 +85,7 @@ def cancel():
 
     print("Cancelled payment:\n token: ", token)
 
-    return "Ayy, got cancelled"
+    return render_template("cancel.html")
 
 
 # FUNCTIONS
