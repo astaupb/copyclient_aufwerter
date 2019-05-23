@@ -1,0 +1,15 @@
+[Unit]
+AssertPathExists=/usr/bin/gunicorn
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/home/astaprint/aufwerter/
+EnvironmentFile=/home/astaprint/aufwerter/env
+ExecStart=/usr/bin/gunicorn --bind 127.0.0.1:8002 wsgi
+Restart=always
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

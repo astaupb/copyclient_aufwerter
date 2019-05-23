@@ -6,12 +6,19 @@ import mysql.connector
 from flask import Flask, render_template, request, Response
 from flask_cors import CORS
 
-#base_url = "https://astaprint.uni-paderborn.de/aufwerter"
-base_url = "http://127.0.0.1:5000"
+
+# INITIALIZE FLASK
+
+# base urls for production and debug
+base_url = os.getenv("AUFWERTER_BASE_URL")
+#base_url = "http://127.0.0.1:5000"
 
 app = Flask(__name__)
 CORS(app)
 
+# INITIALIZE DATABASE
+
+# get credentials from environment url
 db_url = os.getenv("ASTAPRINT_DATABASE_URL")
 db_url_split = db_url.split(':')
 db_user = db_url_split[1].replace("/", "")
@@ -20,6 +27,7 @@ db_host = db_url_split[2].split("@")[1]
 db_port = db_url_split[3].split("/")[0]
 db_name = db_url_split[3].split("/")[1]
 
+# create connection for later
 cnx = mysql.connector.connect(
     user=db_user, password=db_pw, host=db_host, port=db_port, database=db_name)
 cursor = cnx.cursor()
