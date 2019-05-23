@@ -5,7 +5,7 @@ import json
 from flask import Flask, render_template, request, Response
 from flask_cors import CORS
 
-base_url = "http://127.0.0.1:5000"
+base_url = "https://astaprint.uni-paderborn.de/aufwerter"
 
 app = Flask(__name__)
 CORS(app)
