@@ -159,6 +159,6 @@ tags
 
 .DS_Store
 
-environ.sh
+env
 
 # End of https://www.gitignore.io/api/vim,python,visualstudiocode

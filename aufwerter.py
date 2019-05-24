@@ -35,7 +35,7 @@ client_id = os.getenv("PAYPAL_CLIENT_ID")
 client_secret = os.getenv("PAYPAL_CLIENT_SECRET")
 
 paypalrestsdk.configure({
-    "mode": "sandbox",  # sandbox or live
+    "mode": "live",  # sandbox or live
     "client_id": client_id,
     "client_secret": client_secret},)
 
