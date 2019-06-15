@@ -3,7 +3,7 @@ import paypalrestsdk
 import logging
 import json
 import mysql.connector
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request, Response, redirect
 from flask_cors import CORS
 
 
@@ -43,9 +43,12 @@ paypalrestsdk.configure({
 # ROUTES
 
 # landing page with selection of credits
-""" @app.route("/")
+@app.route("/")
 def home():
-    return render_template("home.html") """
+    # this here assumes the Angular client is running on the same host
+    # in http://host/paypal/
+    real_base_url = base_url.partition("/")[0]
+    return redirect(real_base_url + "/paypal/", code=301)
 
 # creates a paypal payment for the value provided in the url
 @app.route("/create/<value>", methods=["POST"])
