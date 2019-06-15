@@ -161,4 +161,6 @@ tags
 
 env
 
+make.mk
+
 # End of https://www.gitignore.io/api/vim,python,visualstudiocode
